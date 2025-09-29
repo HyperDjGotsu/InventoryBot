@@ -11,11 +11,19 @@ intents = discord.Intents.default()
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.tree.command(name="stock", description="Check if we have a card in stock")
-async def stock(interaction: discord.Interaction, tcg: str, product: str):
+@app_commands.describe(
+    tcg="The TCG (e.g., pokemon, mtg, gundam)",
+    product="Card or product name",
+    set_name="Optional: Specific set name (e.g., Evolving Skies)"
+)
+async def stock(interaction: discord.Interaction, tcg: str, product: str, set_name: str = None):
     await interaction.response.defer(thinking=True)
 
     try:
         url = f"{GOOGLE_SCRIPT_URL}?tcg={quote_plus(tcg)}&product={quote_plus(product)}"
+        if set_name:
+            url += f"&set={quote_plus(set_name)}"
+
         response = requests.get(url, timeout=10)
         response.raise_for_status()
         result = response.text.strip()
